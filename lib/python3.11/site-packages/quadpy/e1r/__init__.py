@@ -1,0 +1,1 @@
+from .._agg import _VW9IZ as gauss_laguerre
