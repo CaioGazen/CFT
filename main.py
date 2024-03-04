@@ -24,7 +24,7 @@ def calcular_c(n, t):
     
     return ((path.point(t) * np.exp(-n * 2 *np.pi * 1j *t )))
 
-def test(x):
+def test(x): 
     return (np.sqrt((x ** 4) + 1))
 
 
