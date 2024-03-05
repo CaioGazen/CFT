@@ -1,10 +1,8 @@
 from svg.path import Path, Line, Arc, CubicBezier, QuadraticBezier, parse_path
-import pygame
 from xml.dom import minidom
-from time import sleep
 import numpy as np
-from sympy import *
-from scipy.integrate import quad
+import pygame
+
 
 
 # read the SVG file
@@ -12,20 +10,16 @@ doc = minidom.parse('drawing.svg')
 path_strings = [path.getAttribute('d') for path in doc.getElementsByTagName('path')]
 doc.unlink()
 
-#svgpath =  path_strings[1]
-svgpath = """m 76,232.24998 c 81.57846,-49.53502 158.19366,-20.30271 216,27 61.26714,
-59.36905 79.86223,123.38417 9,156 
--80.84947,31.72743 -125.19991,-53.11474 -118,-91 v 0 """
+svgpath =  path_strings[0]
+
 path = parse_path(svgpath)
 
-n_vetores = 10
+def path_func(t):
+    p = path.point(t)
+    return p
 
 def calcular_c(n, t):
-    
-    return ((path.point(t) * np.exp(-n * 2 *np.pi * 1j *t )))
-
-def test(x): 
-    return (np.sqrt((x ** 4) + 1))
+    return ((path_func(t) * (np.exp(-1* n * 2 *np.pi * 1j *t ))))
 
 
 def midpoint(func, fn, a, b, n):
@@ -36,62 +30,73 @@ def midpoint(func, fn, a, b, n):
     pos_atual = a + (deltaX/2)
 
     for i in range(n):
-        soma += deltaX * func(n, pos_atual)
+        soma += deltaX * func(fn, pos_atual)
         pos_atual += deltaX
 
     return (soma)
-
-cn = []
-for n in range((n_vetores // 2) * -1, (n_vetores // 2) + 1, 1):
-    cn.append((n, midpoint(calcular_c, n, 0, 1, 1000)))
-
-print (cn)
     
-def soma_vetores(t):
+
+def vetor_c(n_vetores):
+    cn = []
+    for n in range((n_vetores // 2) * -1, (n_vetores // 2) + 1, 1):
+        cn.append((n, midpoint(calcular_c, n, 0, 1, 1000)))
+
+    return cn
+
+    
+def soma_vetores(t, cn, scale):
     soma = 0
-
+    vectors = [(0,0)]
     for n, c in cn:
-    #n ,c = cn[6]
-        soma += c * np.exp(-n * 2 * np.pi * 1j * t)
-
-    return soma
-
-
-
-
-#for n in range(n_vetores//2 * - 1, n_vetores//2 + 1):
-#
-#
-#    x = Symbol('x')
-#    print(integrate((f(x)*np.exp(-n*2*np.pi*1j*x)), 0, 1))
-n = 1
-
-#print(quad((f(x) * exp(-n*2*np.pi*1j*x)), 0, 1))
+        vector = c * np.exp(n * 2 * np.pi * 1j * t)
+        soma += vector
+        vectors.append(((vector.real) + vectors[len(vectors) - 1][0], (vector.imag)  + vectors[len(vectors) - 1][1]))
+    
+    vectors = (np.array(vectors)*scale) + 500
+    return soma, vectors
 
 
-pygame.init()                                  # init pygame
-surface = pygame.display.set_mode((1000,1000))   # get surface to draw on
-surface.fill(pygame.Color('white'))            # set background to white
+def main():
+    n_vetores = 200
 
-#pygame.draw.aalines( surface,pygame.Color('blue'), False, pts)  # False is no closing
-#pygame.display.update() # copy surface to display
+    n = 1000
+    pts = [ (p.real + 500,p.imag + 500) for p in (path.point(i/n) for i in range(0, n+1))]
 
-def circulo(t):
-    return np.exp(t * 1j)
+    cn = vetor_c(n_vetores)
+    scale = 0.8
 
-index = 0
-while True:  # loop to wait till window close
-    #if index == 100: 
-    #    index = 0 
-    #    surface.fill(pygame.Color('white'))
+    pygame.init()                                  # init pygame
+    surface = pygame.display.set_mode((1000,1000))   # get surface to draw on
+    surface.fill(pygame.Color('white'))            # set background to white
+    points = []
+    time = 0
+    while True:  # loop to wait till window close
+        if time > 1: 
+            print("loop")
+            time = 0
+            surface.fill(pygame.Color('white'))
 
-    now = soma_vetores(index/100)
+        surface.fill(pygame.Color('white'))
+        
+        #pygame.draw.aalines(surface,pygame.Color('black'), False, pts)
 
-    pygame.draw.circle(surface, (255, 0, 0), ((now.real/10) + 500, (now.imag/10) + 500), 1)
-    pygame.display.update() # copy surface to display   
+
+        now, vectors = soma_vetores(time, cn, scale)
+
+        pygame.draw.aalines( surface,pygame.Color('blue'), False, vectors)
+        points.append(vectors[len(vectors) - 1])
+        pygame.draw.circle(surface, (255, 255, 0), (0,0), 100)
+        for point in points:
+            pygame.draw.circle(surface, (255, 0, 0), point, 1)
+        
+        pygame.display.update() # copy surface to display   
 
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            exit()
-    index += 0.01
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+        time += 0.001
+
+
+if __name__ == "__main__":
+    main()
