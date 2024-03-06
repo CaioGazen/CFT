@@ -6,7 +6,7 @@ import pygame
 
 
 # read the SVG file
-doc = minidom.parse('drawing.svg')
+doc = minidom.parse('cube.svg')
 path_strings = [path.getAttribute('d') for path in doc.getElementsByTagName('path')]
 doc.unlink()
 
@@ -58,16 +58,18 @@ def soma_vetores(t, cn, scale, x_offset, y_offset):
 
 def main():
     window_size = 600
-    x_offset = 300
-    y_offset = 300
-    scale = 0.5
+    x_offset = window_size/2
+    y_offset = window_size/2
+    scale = 15
 
-    n_vetores = 100
+    n_vectors = 100
 
-    n = 1000
+    # original svg
+    n_lines = 1000
     pts = [ ((p.real * scale) + x_offset ,(p.imag * scale) + y_offset ) for p in (path.point(i/n) for i in range(0, n+1))]
 
-    cn = vetor_c(n_vetores)
+
+    cn =   (n_vetores)
     mag_vectors = []
     for n, c in cn:
         x = c * np.exp(n * 2 * np.pi * 1j * 1)
