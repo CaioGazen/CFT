@@ -12,6 +12,7 @@ doc.unlink()
 
 svgpath =  path_strings[0]
 
+
 path = parse_path(svgpath)
 
 def path_func(t):
@@ -42,34 +43,45 @@ def vetor_c(n_vetores):
         cn.append((n, midpoint(calcular_c, n, 0, 1, 1000)))
 
     return cn
-
     
-def soma_vetores(t, cn, scale):
+def soma_vetores(t, cn, scale, x_offset, y_offset):
     soma = 0
+    cs = []
     vectors = [(0,0)]
     for n, c in cn:
         vector = c * np.exp(n * 2 * np.pi * 1j * t)
         soma += vector
         vectors.append(((vector.real) + vectors[len(vectors) - 1][0], (vector.imag)  + vectors[len(vectors) - 1][1]))
-    
-    vectors = (np.array(vectors)*scale) + 500
+
+    vectors = (np.array(vectors)*scale) + (x_offset, y_offset)
     return soma, vectors
 
-
 def main():
-    n_vetores = 200
+    window_size = 600
+    x_offset = 300
+    y_offset = 300
+    scale = 0.5
+
+    n_vetores = 100
 
     n = 1000
-    pts = [ (p.real + 500,p.imag + 500) for p in (path.point(i/n) for i in range(0, n+1))]
+    pts = [ ((p.real * scale) + x_offset ,(p.imag * scale) + y_offset ) for p in (path.point(i/n) for i in range(0, n+1))]
 
     cn = vetor_c(n_vetores)
-    scale = 0.8
+    mag_vectors = []
+    for n, c in cn:
+        x = c * np.exp(n * 2 * np.pi * 1j * 1)
+        mag_vectors.append(np.linalg.norm(x) * scale)
+        
+
 
     pygame.init()                                  # init pygame
-    surface = pygame.display.set_mode((1000,1000))   # get surface to draw on
+    surface = pygame.display.set_mode((window_size,window_size))   # get surface to draw on
     surface.fill(pygame.Color('white'))            # set background to white
+    
     points = []
     time = 0
+
     while True:  # loop to wait till window close
         if time > 1: 
             print("loop")
@@ -78,14 +90,22 @@ def main():
 
         surface.fill(pygame.Color('white'))
         
-        #pygame.draw.aalines(surface,pygame.Color('black'), False, pts)
+        pygame.draw.aalines(surface,pygame.Color('black'), False, pts)
 
 
-        now, vectors = soma_vetores(time, cn, scale)
+        now, vectors = soma_vetores(time, cn, scale, x_offset, y_offset)
 
-        pygame.draw.aalines( surface,pygame.Color('blue'), False, vectors, 5)
+        pygame.draw.lines(surface,pygame.Color('blue'), False, vectors, 2)
         points.append(vectors[len(vectors) - 1])
+
+
+        #print(vectors)
+
         #pygame.draw.circle(surface, (255, 255, 0), (0,0), 100)
+
+        for i in range(len(vectors)):
+            pygame.draw.circle(surface, (200, 0, 0), vectors[i-1], mag_vectors[i-1] ,1)
+
         for point in points:
             pygame.draw.circle(surface, (255, 0, 0), point, 1)
         
