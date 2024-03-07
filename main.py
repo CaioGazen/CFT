@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("cube.svg")
+doc = minidom.parse("spiral.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -65,20 +65,24 @@ def main():
     window_size = 800
     x_offset = window_size / 2
     y_offset = window_size / 2
-    scale = 40
+    scale = 60
     scale_2 = 0
     speed = 10
-    n_vectors = 5
+    n_vectors = 100
 
     step_speed = 0.0001
 
     follow = True
     draw_circles = True
+    draw_svg = True
     curr_folow = 0
     last_key_time = 0
     last_move_time = 0
     # original svg
     n_lines = 1000
+
+    t = 0
+    drawn_points = [(0, 0), (0, 0)]
 
     svg_points = [
         (p.real, p.imag)
@@ -89,18 +93,28 @@ def main():
     surface = pygame.display.set_mode(
         (window_size, window_size)
     )  # get surface to draw on
-    surface.fill(pygame.Color("white"))
-    surface.fill(pygame.Color("white"))  # set background to white
-    pygame.display.update()
 
-    drawn_points = [(0, 0), (0, 0)]
-    t = 0
+    surface.fill(pygame.Color("white"))
+
+    font = pygame.font.Font('LiberationMono-Regular.ttf', 14)
+    text = font.render(f"""
+                            time: {t:.4f}\n
+                            Numero de vetores:{n_vectors} 
+                        """, True, pygame.Color("black"))
+    textRect = text.get_rect()
+    textRect.topleft = (10,10)
+    pygame.display.update()
 
     coefficients = get_coefficients(n_vectors)
 
     while True:  # loop to wait till window close
         # limpar a tela
         surface.fill(pygame.Color("white"))
+        text = font.render(f"""
+                            time: {t:.4f}\n
+                            Numero de vetores:{n_vectors} 
+                           """, True, pygame.Color("black"))
+        surface.blit(text, textRect)
 
         # resetar tempo
         if t > 1:
@@ -116,21 +130,14 @@ def main():
             x_offset = ((curr_folow_pos[0] * scale) - (window_size / 2)) * -1
             y_offset = ((curr_folow_pos[1] * scale) - (window_size / 2)) * -1
 
-        # desenhar svg original
-        pygame.draw.aalines(
-            surface,
-            pygame.Color("black"),
-            False,
-            get_scale(svg_points, scale, x_offset, y_offset),
-        )
-
-        #pygame.draw.lines(
-        #    surface,
-        #    pygame.Color("blue"),
-        #    False,
-        #    get_scale(vectors, scale, x_offset, y_offset),
-        #    2,
-        #)
+        if draw_svg:
+            # desenhar svg original
+            pygame.draw.aalines(
+                surface,
+                pygame.Color("black"),
+                False,
+                get_scale(svg_points, scale, x_offset, y_offset),
+            )
 
         # desenhar vetores
         for n in range(len(vectors) - 1):
@@ -205,6 +212,9 @@ def main():
                 last_key_time = time.time()
             curr_folow = 0 if curr_folow >= len(vectors) else curr_folow
 
+        if keys[pygame.K_b] and time.time() - last_key_time > 0.2:
+            draw_svg = not draw_svg
+            last_key_time = time.time()
 
         mouse_keys = pygame.mouse.get_pressed()
         if mouse_keys[0]:
