@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("cube.svg")
+doc = minidom.parse("spiral.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -66,15 +66,16 @@ def main():
     x_offset = window_size / 2
     y_offset = window_size / 2
     scale = 40
+    scale_2 = 0
     speed = 10
-    n_vectors = 10
+    n_vectors = 5
 
     step_speed = 0.0001
 
     follow = True
     curr_folow = 0
-    last_follow_time = time.time()
-
+    last_follow_time = 0
+    last_move_time = 0
     # original svg
     n_lines = 1000
 
@@ -91,13 +92,12 @@ def main():
     surface.fill(pygame.Color("white"))  # set background to white
     pygame.display.update()
 
-    drawn_points = [(0,0),(0,0)]
+    drawn_points = [(0, 0), (0, 0)]
     t = 0
 
     coefficients = get_coefficients(n_vectors)
 
     while True:  # loop to wait till window close
-        start = time.time()
         # limpar a tela
         surface.fill(pygame.Color("white"))
 
@@ -122,28 +122,29 @@ def main():
             False,
             get_scale(svg_points, scale, x_offset, y_offset),
         )
-        pygame.draw.lines(
-            surface,
-            pygame.Color("blue"),
-            False,
-            get_scale(vectors, scale, x_offset, y_offset),
-            2,
-        )
+
+        #pygame.draw.lines(
+        #    surface,
+        #    pygame.Color("blue"),
+        #    False,
+        #    get_scale(vectors, scale, x_offset, y_offset),
+        #    2,
+        #)
 
         # desenhar vetores
         for n in range(len(vectors) - 1):
             draw_arrow(
                 surface,
                 pygame.Vector2(
-                    get_scale(vectors[n], scale, x_offset, y_offset).tolist()
+                    get_scale(vectors[n + 0], scale, x_offset, y_offset).tolist()
                 ),
                 pygame.Vector2(
                     get_scale(vectors[n + 1], scale, x_offset, y_offset).tolist()
                 ),
                 pygame.Color("blue"),
                 0.005 * scale * coefficients[n][0],
-                0.1 * scale * coefficients[n][0],
-                0.1 * scale * coefficients[n][0],
+                0.1   * scale * coefficients[n][0],
+                0.1   * scale * coefficients[n][0],
             )
 
         # desenhar circulos
@@ -159,7 +160,7 @@ def main():
         # deenhar todos os pontos
         drawn_points.append(vectors[len(vectors) - 1])
 
-        #for point in drawn_points:
+        # for point in drawn_points:
         #    pygame.draw.circle(
         #        surface, (255, 0, 0), get_scale(point, scale, x_offset, y_offset), 1
         #    )
@@ -174,27 +175,42 @@ def main():
         pygame.display.update()  # update surface
 
         # Controls
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
 
         keys = pygame.key.get_pressed()
         x_offset -= (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * speed
         y_offset -= (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * speed
 
-        scale += keys[pygame.K_j] - keys[pygame.K_k]
+        scale_2 += (keys[pygame.K_j] - keys[pygame.K_k])/50
+        scale = np.exp(scale_2 * -1)
 
         if keys[pygame.K_f]:
-            follow = not follow
+            if time.time() - last_follow_time > 0.2:
+                follow = not follow
+            last_follow_time = time.time()
 
         if keys[pygame.K_m] or keys[pygame.K_n]:
             if time.time() - last_follow_time > 0.2:
                 curr_folow += keys[pygame.K_m] - keys[pygame.K_n]
                 last_follow_time = time.time()
-            curr_folow = 0 if curr_folow > len(vectors) else curr_folow
+            curr_folow = 0 if curr_folow >= len(vectors) else curr_folow
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
+        
+        mouse_keys = pygame.mouse.get_pressed()
+        if mouse_keys[0]:
+            if time.time() - last_move_time > 0.1:
+                pygame.mouse.get_rel()
+                print("timed")
+            mouse_moved = pygame.mouse.get_rel()
+            print(mouse_moved)
+            x_offset = x_offset + mouse_moved[0]
+            y_offset = y_offset +  mouse_moved[1]
+            last_move_time = time.time()
 
-        print(f"took: {time.time() - start}")
+
+
         t += step_speed
 
 
