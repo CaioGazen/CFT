@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("spiral.svg")
+doc = minidom.parse("cube.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -62,7 +62,7 @@ def get_scale(point, scale, x_offset, y_offset):
 
 
 def main():
-    window_size = 1000
+    window_size = 800
     x_offset = window_size / 2
     y_offset = window_size / 2
     scale = 40
@@ -73,8 +73,9 @@ def main():
     step_speed = 0.0001
 
     follow = True
+    draw_circles = True
     curr_folow = 0
-    last_follow_time = 0
+    last_key_time = 0
     last_move_time = 0
     # original svg
     n_lines = 1000
@@ -148,14 +149,15 @@ def main():
             )
 
         # desenhar circulos
-        for i in range(len(vectors)):
-            pygame.draw.circle(
-                surface,
-                (200, 0, 0),
-                get_scale(vectors[i - 1], scale, x_offset, y_offset),
-                coefficients[i - 1][0] * scale,
-                1,
-            )
+        if draw_circles:
+            for i in range(len(vectors)):
+                pygame.draw.circle(
+                    surface,
+                    (200, 0, 0),
+                    get_scale(vectors[i - 1], scale, x_offset, y_offset),
+                    coefficients[i - 1][0] * scale,
+                    1,
+                )
 
         # deenhar todos os pontos
         drawn_points.append(vectors[len(vectors) - 1])
@@ -176,6 +178,8 @@ def main():
 
         # Controls
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEWHEEL:
+                scale_2 += event.y/50
             if event.type == pygame.QUIT:
                 exit()
 
@@ -186,18 +190,22 @@ def main():
         scale_2 += (keys[pygame.K_j] - keys[pygame.K_k])/50
         scale = np.exp(scale_2 * -1)
 
+        if keys[pygame.K_c] and time.time() - last_key_time > 0.2:
+            draw_circles = not draw_circles
+            last_key_time = time.time()
+
         if keys[pygame.K_f]:
-            if time.time() - last_follow_time > 0.2:
+            if time.time() - last_key_time > 0.2:
                 follow = not follow
-            last_follow_time = time.time()
+            last_key_time = time.time()
 
         if keys[pygame.K_m] or keys[pygame.K_n]:
-            if time.time() - last_follow_time > 0.2:
+            if time.time() - last_key_time > 0.2:
                 curr_folow += keys[pygame.K_m] - keys[pygame.K_n]
-                last_follow_time = time.time()
+                last_key_time = time.time()
             curr_folow = 0 if curr_folow >= len(vectors) else curr_folow
 
-        
+
         mouse_keys = pygame.mouse.get_pressed()
         if mouse_keys[0]:
             if time.time() - last_move_time > 0.1:
