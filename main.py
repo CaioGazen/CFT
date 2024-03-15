@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("cube.svg")
+doc = minidom.parse("drawing.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -69,15 +69,16 @@ def main():
     scale = 60
     scale_2 = 0.005
 
-    speed = 10
-    n_vectors = 20
-
     step_speed = 0.0001
-    step_speed_linear = 8
+    step_speed_linear = 10
+    
+    mov_speed = 0.5
+    n_vectors = 100
+
 
     follow = True
-    draw_circles = True
-    draw_svg = True
+    draw_circles = False
+    draw_svg = False
     curr_folow = 0
     last_key_time = 0
     last_move_time = 0
@@ -97,13 +98,13 @@ def main():
         (window_size, window_size)
     )  # get surface to draw on
 
-    surface.fill(pygame.Color("white"))
+    surface.fill(pygame.Color("black"))
 
     font = pygame.font.Font('LiberationMono-Regular.ttf', 14)
     text = font.render(f"""
                             time: {t:.4f}\n
                             Numero de vetores:{n_vectors} 
-                        """, True, pygame.Color("black"))
+                        """, True, pygame.Color("white"))
     textRect = text.get_rect()
     textRect.topleft = (10,10)
     pygame.display.update()
@@ -112,8 +113,8 @@ def main():
 
     while True:  # loop to wait till window close
         # limpar a tela
-        surface.fill(pygame.Color("white"))
-        text = font.render(f"time: {t:.4f}" f"\nNumero de vetores:{n_vectors}" f"\nTime Step {step_speed}", True, pygame.Color("black"))
+        surface.fill(pygame.Color("black"))
+        text = font.render(f"time: {t:.4f}" f"\nNumero de vetores:{n_vectors}" f"\nTime Step {step_speed}", True, pygame.Color("white"))
         surface.blit(text, textRect)
 
         # resetar tempo
@@ -134,7 +135,7 @@ def main():
             # desenhar svg original
             pygame.draw.aalines(
                 surface,
-                pygame.Color("black"),
+                pygame.Color("white"),
                 False,
                 get_scale(svg_points, scale, x_offset, y_offset),
             )
@@ -149,7 +150,7 @@ def main():
                 pygame.Vector2(
                     get_scale(vectors[n + 1], scale, x_offset, y_offset).tolist()
                 ),
-                pygame.Color("blue"),
+                pygame.Color("white"),
                 0.005 * scale * coefficients[n][0],
                 0.1   * scale * coefficients[n][0],
                 0.1   * scale * coefficients[n][0],
@@ -160,7 +161,7 @@ def main():
             for i in range(len(vectors)):
                 pygame.draw.circle(
                     surface,
-                    (200, 0, 0),
+                    (0, 191, 255),
                     get_scale(vectors[i - 1], scale, x_offset, y_offset),
                     coefficients[i - 1][0] * scale,
                     1,
@@ -191,14 +192,18 @@ def main():
                 exit()
 
         keys = pygame.key.get_pressed()
-        x_offset -= (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * speed
-        y_offset -= (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * speed
+        x_offset -= (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * mov_speed
+        y_offset -= (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * mov_speed
 
         scale_2 += (keys[pygame.K_j] - keys[pygame.K_k])/50
         scale = np.exp(scale_2 * -1)
 
         step_speed_linear += (keys[pygame.K_COMMA] - keys[pygame.K_PERIOD])/10
         step_speed = np.exp(step_speed_linear * -1)
+
+        if keys[pygame.K_SPACE] and time.time() - last_key_time > 0.2:
+            drawn_points = [(0, 0), (0, 0)]
+            last_key_time = time.time()
 
         if keys[pygame.K_c] and time.time() - last_key_time > 0.2:
             draw_circles = not draw_circles
