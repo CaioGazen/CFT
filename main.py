@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("spiral.svg")
+doc = minidom.parse("cube.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -62,15 +62,18 @@ def get_scale(point, scale, x_offset, y_offset):
 
 
 def main():
-    window_size = 800
+    window_size = 600
     x_offset = window_size / 2
     y_offset = window_size / 2
+
     scale = 60
-    scale_2 = 0
+    scale_2 = 0.005
+
     speed = 10
-    n_vectors = 100
+    n_vectors = 20
 
     step_speed = 0.0001
+    step_speed_linear = 8
 
     follow = True
     draw_circles = True
@@ -110,10 +113,7 @@ def main():
     while True:  # loop to wait till window close
         # limpar a tela
         surface.fill(pygame.Color("white"))
-        text = font.render(f"""
-                            time: {t:.4f}\n
-                            Numero de vetores:{n_vectors} 
-                           """, True, pygame.Color("black"))
+        text = font.render(f"time: {t:.4f}" f"\nNumero de vetores:{n_vectors}" f"\nTime Step {step_speed}", True, pygame.Color("black"))
         surface.blit(text, textRect)
 
         # resetar tempo
@@ -196,6 +196,9 @@ def main():
 
         scale_2 += (keys[pygame.K_j] - keys[pygame.K_k])/50
         scale = np.exp(scale_2 * -1)
+
+        step_speed_linear += (keys[pygame.K_COMMA] - keys[pygame.K_PERIOD])/10
+        step_speed = np.exp(step_speed_linear * -1)
 
         if keys[pygame.K_c] and time.time() - last_key_time > 0.2:
             draw_circles = not draw_circles
