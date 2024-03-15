@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("cube.svg")
+doc = minidom.parse("spiral.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
