@@ -202,6 +202,12 @@ def main():
         step_speed_linear += (keys[pygame.K_COMMA] - keys[pygame.K_PERIOD])/10
         step_speed = np.exp(step_speed_linear * -1)
 
+        n_vectors += (keys[pygame.K_i] - keys[pygame.K_u])
+
+        if keys[pygame.K_r] and time.time() - last_key_time > 0.2:
+            coefficients = get_coefficients(n_vectors)
+            last_key_time = time.time()
+
         if keys[pygame.K_SPACE] and time.time() - last_key_time > 0.2:
             drawn_points = []
             last_key_time = time.time()
