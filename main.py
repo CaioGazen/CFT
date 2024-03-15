@@ -6,7 +6,7 @@ import pygame
 from svg.path import parse_path
 
 # read the SVG file
-doc = minidom.parse("drawing.svg")
+doc = minidom.parse("cube.svg")
 path_strings = [path.getAttribute("d") for path in doc.getElementsByTagName("path")]
 doc.unlink()
 
@@ -73,7 +73,7 @@ def main():
     step_speed_linear = 10
     
     mov_speed = 0.5
-    n_vectors = 100
+    n_vectors = 200
 
 
     follow = True
@@ -86,7 +86,7 @@ def main():
     n_lines = 1000
 
     t = 0
-    drawn_points = [(0, 0), (0, 0)]
+    drawn_points = []
 
     svg_points = [
         (p.real, p.imag)
@@ -175,12 +175,13 @@ def main():
         #        surface, (255, 0, 0), get_scale(point, scale, x_offset, y_offset), 1
         #    )
 
-        pygame.draw.aalines(
-            surface,
-            pygame.Color("red"),
-            False,
-            get_scale(drawn_points, scale, x_offset, y_offset),
-        )
+        if len(drawn_points) > 1:
+            pygame.draw.aalines(
+                surface,
+                pygame.Color("red"),
+                False,
+                get_scale(drawn_points, scale, x_offset, y_offset),
+            )
 
         pygame.display.update()  # update surface
 
@@ -202,7 +203,7 @@ def main():
         step_speed = np.exp(step_speed_linear * -1)
 
         if keys[pygame.K_SPACE] and time.time() - last_key_time > 0.2:
-            drawn_points = [(0, 0), (0, 0)]
+            drawn_points = []
             last_key_time = time.time()
 
         if keys[pygame.K_c] and time.time() - last_key_time > 0.2:
